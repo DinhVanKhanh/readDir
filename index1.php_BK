@@ -1,0 +1,102 @@
+<?php
+    set_time_limit(3600 * 5);
+    editFolder(realpath(__DIR__));
+    echo "Finish";
+?>
+
+<?php
+function editFolder($dir) {
+    $cdir = scandir($dir);
+    foreach ($cdir as $key => $value) {
+        if (!in_array($value, array(".", ".."))) {
+            if (is_dir($dir.DIRECTORY_SEPARATOR.$value) && strpos(strtolower($value), "calender") === false) {
+                editFolder($dir.DIRECTORY_SEPARATOR.$value);
+            }
+            else if (!is_dir($dir.DIRECTORY_SEPARATOR.$value)) {
+                $setMeta = false;
+                $value = $dir.DIRECTORY_SEPARATOR.$value;
+                $parts = explode(".", $value);
+                $newName = $parts[0].".php";
+                $isMovie = (strpos($value, "branding")) ? true : false;
+                if ($parts[1] == "asp") {
+                    rename($value, $newName);
+                }
+                if (strpos($newName, "index1.php") === false && file_exists($newName) && !in_array($parts[1], ['png','jpg','gif'])) {
+                    $lines = file($parts[0].".php", FILE_SKIP_EMPTY_LINES | FILE_IGNORE_NEW_LINES);
+                    $numLine = count($lines);
+                    $newLines = array();
+                    for ($i = 0; $i < $numLine; $i++) {
+                        // Edit line <meta http-equiv="Content-Type" content="text/html; charset=shift-jis"> to charset=utf-8
+                        $lines[$i] = str_replace(['Shift_JIS','shift_JIS','SHIFT_JIS','shift_jis','Shift_Jis'], 'utf-8', $lines[$i]);
+
+                        // Edite http to https
+                        // $lines[$i] = str_replace("http:", "https:", $lines[$i]);
+
+                        // Edit links from https://www.sorimachi.co.jp/usersupport/products_support/products_faq/xxxx-xxxx.asp to xxxx-xxxx.asp only (change web host)
+                        
+                        // Except 3 links, conver all XXX.asp to XXX.php
+                        if (strpos($lines[$i], ".asp") !== false && strpos($lines[$i], ".aspx") === false) {
+                            $lines[$i] = str_replace(".asp", ".php", $lines[$i]);
+                        }
+
+                        // remove 
+                        //is added most recently 11/3/2020
+                        if( strpos($lines[$i], '<!-- #include virtual = "/faq-s/lib/bs_productsfaq_function.inc" -->') !== false ){
+                            $lines[$i] = str_replace('<!-- #include virtual = "/faq-s/lib/bs_productsfaq_function.inc" -->',
+                                            '<?php require_once __DIR__ . "/../../../../lib/bs_productsfaq_function.php" ; ?>',$lines[$i]);
+                            $lines[$i] .="\n";
+
+                        }
+
+                        if( strpos($lines[$i], '<!-- #include virtual = "/faq-s/lib/movie_footer.inc" -->') !== false ){
+                            $lines[$i] = str_replace('<!-- #include virtual = "/faq-s/lib/movie_footer.inc" -->',
+                                            '<?php require_once __DIR__ . "/../../../../lib/movie_footer.php" ;?>',$lines[$i]);
+                            $lines[$i] .="\n";
+
+                        }
+
+                        if( strpos($lines[$i], '<!-- #include virtual = "/faq-s/lib/bs_productsfaq_footer.inc" -->') !== false ){
+                            $lines[$i] = str_replace('<!-- #include virtual = "/faq-s/lib/bs_productsfaq_footer.inc" -->',
+                                            '<?php require_once __DIR__ . "/../../../../lib/bs_productsfaq_footer.php" ; ?>',$lines[$i]);
+                            $lines[$i] .="\n";
+
+                        }
+                            
+                        if( strpos($lines[$i], '<!-- #include virtual = "/faq-s/lib/bs_productsfaq_footer.inc" -->') !== false ){
+                            $lines[$i] = str_replace('<!-- #include virtual = "/faq-s/lib/bs_productsfaq_footer.inc" -->',
+                                            '<?php require_once __DIR__ . "/../../../../lib/bs_productsfaq_footer.php" ;?>',$lines[$i]);
+                            $lines[$i] .="\n";
+
+                        }         
+
+                        if( strpos($lines[$i], '<!--#include virtual="ssi/gajs.inc"-->') !== false ){
+                            $lines[$i] = str_replace('<!--#include virtual="ssi/gajs.inc"-->',
+                                            '<?php require_once __DIR__ . "/../../../../ssi/gajs.php" ; ?>',$lines[$i]);
+                            $lines[$i] .="\n";
+
+                        }
+
+                        if( strpos($lines[$i], '<!-- #include virtual = "/ssi/gajs.inc" -->') !== false ){
+                            $lines[$i] = str_replace('<!-- #include virtual = "/ssi/gajs.inc" -->',
+                                            '<?php require_once __DIR__ . "/../../../../ssi/gajs.php" ; ?>',$lines[$i]);
+                            $lines[$i] .="\n";
+
+                        }
+
+                        // Insert newline "\n" (to read code easier)
+                        $lines[$i] .= "\n";
+
+                        // Convert encoding shift-jis to utf-8
+                        $lines[$i] = (!mb_detect_encoding($lines[$i], 'UTF-8', true)) ? iconv("SHIFT-JIS", "UTF-8//IGNORE", $lines[$i]) : $lines[$i];
+                        
+                        // Insert to list content (str_replace used for converting address, example: C:\doc => C:ﾂ･doc)
+                        $newLines[] = str_replace("ﾂ･", "\\", $lines[$i]);
+                        }
+                        // Write list content back to the file .php
+                        file_put_contents($newName, $newLines, LOCK_EX);
+                }
+            }
+        }
+    }
+}
+?>

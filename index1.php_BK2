@@ -1,0 +1,299 @@
+<?php
+    set_time_limit(3600 * 5);
+    editFolder(realpath(__DIR__));
+    echo "Finish";
+?>
+
+<?php
+function editFolder($dir) {
+    $cdir = scandir($dir);
+    foreach ($cdir as $key => $value) {
+        if (!in_array($value, array(".", ".."))) {
+            if (is_dir($dir.DIRECTORY_SEPARATOR.$value) && strpos(strtolower($value), "calender") === false) {
+                editFolder($dir.DIRECTORY_SEPARATOR.$value);
+            }
+            else if (!is_dir($dir.DIRECTORY_SEPARATOR.$value)) {
+                $setMeta = false;
+                $value = $dir.DIRECTORY_SEPARATOR.$value;
+                $parts = explode(".", $value);
+                $newName = $parts[0].".php";
+                $isMovie = (strpos($value, "branding")) ? true : false;
+                if ($parts[1] == "asp") {
+                    rename($value, $newName);
+                }
+                if (strpos($newName, "index1.php") === false && file_exists($newName) && !in_array($parts[1], ['png','jpg','gif'])) {
+                    $lines = file($parts[0].".php", FILE_SKIP_EMPTY_LINES | FILE_IGNORE_NEW_LINES);
+                    $numLine = count($lines);
+                    $newLines = array();
+                    for ($i = 0; $i < $numLine; $i++) {
+                        // Edit line <meta http-equiv="Content-Type" content="text/html; charset=shift-jis"> to charset=utf-8
+                        $lines[$i] = str_replace(['Shift_JIS','shift_JIS','SHIFT_JIS','shift_jis','Shift_Jis'], 'utf-8', $lines[$i]);
+
+                        // Edite http to https
+                        // $lines[$i] = str_replace("http:", "https:", $lines[$i]);
+
+                        // Edit links from https://www.sorimachi.co.jp/usersupport/products_support/products_faq/xxxx-xxxx.asp to xxxx-xxxx.asp only (change web host)
+                        
+                        // Except 3 links, conver all XXX.asp to XXX.php
+                        if (strpos($lines[$i], ".asp") !== false && strpos($lines[$i], ".aspx") === false) {
+                            $lines[$i] = str_replace(".asp", ".php", $lines[$i]);
+                        }
+
+                        // remove 
+                        //is added most recently 11/3/2020
+                        if(strpos($lines[$i], "<% Option Explicit %>") !== false || strpos($lines[$i], '<%@ LANGUAGE="VBScript" %>') !== false){
+                            // echo "234"; die();
+                            $lines[$i] = str_replace(["<% Option Explicit %>",'<%@ LANGUAGE="VBScript" %>'],"",$lines[$i]);
+                            $lines[$i] .="\n";
+                            continue;
+                        }
+
+
+
+                        if (strpos($lines[$i],"<!-- #include virtual") === false &&  $isMovie === true) {
+                            if(strpos($lines[$i], "/saag/") !==false ){
+                                $lines[$i] = str_replace("/saag/","../",$lines[$i]);
+
+                            }
+                            if(strpos($lines[$i], "/ssi/") !==false ){
+                                if(strpos($lines[$i], "../ssi/") === false)
+                                    $lines[$i] = str_replace("/ssi/","../../ssi/",$lines[$i]);
+
+                            }
+                            if(strpos($lines[$i], "/common/") !==false ){
+                                if(strpos($lines[$i], "../common/") === false)
+                                    $lines[$i] = str_replace("/common/","../../common/",$lines[$i]);
+                            }
+                            // if(strpos($lines[$i], '"lib/') !==false ){
+                            //     echo "234"; die();
+                            //     $lines[$i] = str_replace('"lib/','"../../lib/',$lines[$i]);
+
+                            // }
+                            if(strpos($lines[$i], "/officecloud/") !==false ){
+                                if(strpos($lines[$i], "../officecloud/") === false)
+                                    $lines[$i] = str_replace("/officecloud/","../../officecloud/",$lines[$i]);
+
+                            }
+                            if(strpos($lines[$i], "/lp-moneylink/") !==false ){
+                                if(strpos($lines[$i], "../lp-moneylink/") === false)
+                                    $lines[$i] = str_replace("/lp-moneylink/","../../lp-moneylink/",$lines[$i]);
+
+                            }
+                            if(strpos($lines[$i], "/products_gyou/") !==false ){
+                                if(strpos($lines[$i], "../products_gyou/") === false)
+                                    $lines[$i] = str_replace("/products_gyou/","../../products_gyou/",$lines[$i]);
+
+                            }
+                            // if(strpos($lines[$i], "/smp-pres/") !==false ){
+
+                            // }
+                            $lines[$i] .="\n";
+                          
+                            $newLines[] = iconv("SHIFT-JIS", "UTF-8//IGNORE", $lines[$i]);
+                            // echo "<pre>"; var_dump(($arr[0]).$arr[1]);
+                            continue;
+                        }
+                        //if not branding
+                        if (strpos($lines[$i],"<!-- #include virtual") === false &&  $isMovie === false) {
+                            if(strpos($lines[$i], "/saag/") !==false ){
+                                $lines[$i] = str_replace("/saag/","../",$lines[$i]);
+
+                            }
+                            if(strpos($lines[$i], "/ssi/") !==false ){
+                                if(strpos($lines[$i], "../ssi/") === false)
+                                    $lines[$i] = str_replace("/ssi/","../ssi/",$lines[$i]);
+
+                            }
+                            if(strpos($lines[$i], "/common/") !==false ){
+                                if(strpos($lines[$i], "../common/") === false)
+                                    $lines[$i] = str_replace("/common/","../common/",$lines[$i]);
+                            }
+                            // if(strpos($lines[$i], '"lib/') !==false ){
+                            //     echo "234"; die();
+                            //     $lines[$i] = str_replace('"lib/','"../../lib/',$lines[$i]);
+
+                            // }
+                            if(strpos($lines[$i], "/officecloud/") !==false ){
+                                if(strpos($lines[$i], "../officecloud/") === false)
+                                    $lines[$i] = str_replace("/officecloud/","../officecloud/",$lines[$i]);
+
+                            }
+                            if(strpos($lines[$i], "/lp-moneylink/") !==false ){
+                                if(strpos($lines[$i], "../lp-moneylink/") === false)
+                                    $lines[$i] = str_replace("/lp-moneylink/","../lp-moneylink/",$lines[$i]);
+
+                            }
+                            if(strpos($lines[$i], "/products_gyou/") !==false ){
+                                if(strpos($lines[$i], "../products_gyou/") === false)
+                                    $lines[$i] = str_replace("/products_gyou/","../products_gyou/",$lines[$i]);
+
+                            }
+                            // if(strpos($lines[$i], "/smp-pres/") !==false ){
+
+                            // }
+                            $lines[$i] .= "\n";
+                            $newLines[] = iconv("SHIFT-JIS", "UTF-8//IGNORE", $lines[$i]);
+                            // echo "<pre>"; var_dump(($arr[0]).$arr[1]);
+                            continue;
+                        }
+
+                        // convert include of ASP into PHP
+                        if (strpos($lines[$i],"<!-- #include virtual") !== false &&  $isMovie === true) {
+                           
+                            if(strpos($lines[$i],"<!-- #include virtual") !== false){
+                                if(strpos($lines[$i],'#include virtual = "lib/')){
+                                    // echo "23"; die();
+                                    $lines[$i] = str_replace('#include virtual = "lib/','require_once "../../../common_files/',$lines[$i]);
+                                    $lines[$i] = str_replace("<!--", '<?php', $lines[$i]);
+                                    $lines[$i] = str_replace("-->", '?>', $lines[$i]);
+                                    $lines[$i] = str_replace(".inc", ".php",$lines[$i]);
+
+                                }else{
+                                    $arr = explode("=",$lines[$i]);
+                                    $arr[0] = str_replace("<!-- #include virtual", '<?php require_once', $arr[0]);
+
+                                    $arr[1] = substr(trim($arr[1]),1,-3);
+                                    $arr[1] = str_replace(".inc", ".php",$arr[1]);
+                                    // echo "<pre>";print_r($arr[1]); die();
+                                    $arr[1] = ($isMovie ? '"../../'.$arr[1].'?>': $arr[1].'?>');
+                                    $lines[$i] = $arr[0].$arr[1];
+                                }
+                            }
+
+                            
+                            // if(strpos($lines[$i], "/smp-pres/") !==false ){
+
+                            // }
+                            $lines[$i] .="\n";
+
+                            $newLines[] = iconv("SHIFT-JIS", "UTF-8//IGNORE", $lines[$i]);
+                            // echo "<pre>"; var_dump(($arr[0]).$arr[1]);
+                            continue;
+                        }
+
+                        // convert include of ASP into PHP
+                        if (strpos($lines[$i],"<!-- #include virtual") !== false &&  $isMovie ===false) {
+                            if(strpos($lines[$i],"<!-- #include virtual") !== false){
+                                // echo "234"; die();
+                                if(strpos($lines[$i],'#include virtual = "lib/')){
+                                    // echo "23"; die();
+                                    $lines[$i] = str_replace('#include virtual = "lib/','require_once "../../common_files/',$lines[$i]);
+                                    $lines[$i] = str_replace("<!--", '<?php', $lines[$i]);
+                                    $lines[$i] = str_replace("-->", '?>', $lines[$i]);
+                                    $lines[$i] = str_replace(".inc", ".php",$lines[$i]);
+
+                                }else{
+                                    // echo "234";
+                                    $arr = explode("=",$lines[$i]);
+                                    $arr[0] = str_replace("<!-- #include virtual", '<?php require_once', $arr[0]);
+
+                                    $arr[1] = substr(trim($arr[1]),1,-3);
+                                    $arr[1] = str_replace(".inc", ".php",$arr[1]);
+                                    // echo "<pre>";print_r($arr[1]); die();
+                                    $arr[1] = '"../'.$arr[1].'?>';
+                                    $lines[$i] = $arr[0].$arr[1];
+                                    // $a[] = $arr[0].$arr[1];
+                                    // echo "<pre>";print_r($a);
+                                }
+                            }
+
+                            // if(strpos($lines[$i], "/ssi/") !==false ){
+                            //     if(strpos($lines[$i], "../ssi/") === false)
+                            //         $lines[$i] = str_replace("/ssi/","../ssi/",$lines[$i]);
+
+                            // }
+                            // if(strpos($lines[$i], "/common/") !==false ){
+                            //     if(strpos($lines[$i], "../common/") === false)
+                            //         $lines[$i] = str_replace("/common/","../common/",$lines[$i]);
+                            // }
+                            // // if(strpos($lines[$i], '"lib/') !==false ){
+                            // //     echo "234"; die();
+                            // //     $lines[$i] = str_replace('"lib/','"../../lib/',$lines[$i]);
+
+                            // // }
+                            // if(strpos($lines[$i], "/officecloud/") !==false ){
+                            //     if(strpos($lines[$i], "../officecloud/") === false)
+                            //         $lines[$i] = str_replace("/officecloud/","../officecloud/",$lines[$i]);
+
+                            // }
+                            // if(strpos($lines[$i], "/lp-moneylink/") !==false ){
+                            //     if(strpos($lines[$i], "../lp-moneylink/") === false)
+                            //         $lines[$i] = str_replace("/lp-moneylink/","../lp-moneylink/",$lines[$i]);
+
+                            // }
+                            // if(strpos($lines[$i], "/products_gyou/") !==false ){
+                            //     if(strpos($lines[$i], "../products_gyou/") === false)
+                            //         $lines[$i] = str_replace("/products_gyou/","../products_gyou/",$lines[$i]);
+
+                            // }
+                            // if(strpos($lines[$i], "/smp-pres/") !==false ){
+                            $lines[$i] .= "\n";
+                            // }
+                            $newLines[] = iconv("SHIFT-JIS", "UTF-8//IGNORE", $lines[$i]);
+                            // echo "<pre>"; var_dump(($arr[0]).$arr[1]);
+                            continue;
+
+                        }
+                      
+
+
+
+                        //is added most recently 11/3/2020
+                        // if(strpos($lines[$i], "/ssi/") !==false ){
+                        //     // echo "done"; die();
+                        //     $lines[$i] = str_replace("/ssi/","../ssi/",$lines[$i]);
+                        //     // $lines[$i] = str_replace("/common/","../common/",$lines[$i]);
+                            
+                        //     // $lines[$i] = str_replace('"lib/',"../../common_files/lib/",$lines[$i]);
+                        //     // $lines[$i] = str_replace("/officecloud/","../officecloud/",$lines[$i]);
+
+                        //     // $lines[$i] = str_replace("/smp-pres/","../smp-pres/",$lines[$i]);
+                        //     // $lines[$i] = str_replace("/officecloud/tablet/","../officecloud/tablet/",$lines[$i]);
+                        //     // $lines[$i] = str_replace("/lp-moneylink/","../lp-moneylink/",$lines[$i]);
+
+                        //     // // ---
+                        //     // $lines[$i] = str_replace("/products_gyou/","../products_gyou/",$lines[$i]);
+
+                        //     $newLines[] = iconv("SHIFT-JIS", "UTF-8//IGNORE", $lines[$i]);
+                        //     continue;
+
+                        // }
+
+                        // if(strpos($lines[$i], "/common/") !==false){
+                        //     // echo "done"; die();
+                        //     $lines[$i] = str_replace("/common/","../common/",$lines[$i]);
+                            
+                        //     $newLines[] = iconv("SHIFT-JIS", "UTF-8//IGNORE", $lines[$i]);
+                        //     continue;
+
+                        // }
+
+                        // if(strpos($lines[$i], '"lib/') !==false){
+                        //      $lines[$i] = str_replace('"lib/','"../../common_files/lib/',$lines[$i]);
+                        //      $newLines[] = iconv("SHIFT-JIS", "UTF-8//IGNORE", $lines[$i]);
+                        //      continue;
+                        // }
+
+                        // Insert <meta name="robots" content="noindex"> if not existed
+                        $setMeta = (strpos(strtolower($lines[$i]), "robots") && strpos(strtolower($lines[$i]), "noindex")) ? true : $setMeta;
+                        if (strpos($lines[$i], "/head") !== false && strpos($lines[$i], "/header") === false && $setMeta == false) {
+                            $newLines[] = '<meta name="robots" content="noindex">'."\n";
+                        }
+
+                        // Insert newline "\n" (to read code easier)
+                        $lines[$i] .= "\n";
+
+                        // Convert encoding shift-jis to utf-8
+                        $lines[$i] = (!mb_detect_encoding($lines[$i], 'UTF-8', true)) ? iconv("SHIFT-JIS", "UTF-8//IGNORE", $lines[$i]) : $lines[$i];
+                        
+                        // Insert to list content (str_replace used for converting address, example: C:\doc => C:ﾂ･doc)
+                        $newLines[] = str_replace("ﾂ･", "\\", $lines[$i]);
+                    }
+                    // Write list content back to the file .php
+                    file_put_contents($newName, $newLines, LOCK_EX);
+                }
+            }
+        }
+    }
+}
+?>
